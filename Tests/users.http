@@ -1,0 +1,9 @@
+POST http://localhost:8000/api/users/register?email=test3@test.com&password=123456&name=TestUser
+Accept: application/json
+
+###
+
+GET http://127.0.0.1:8000/api/users/test3@test.com
+Accept: application/json
+
+###
