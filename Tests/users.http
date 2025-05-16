@@ -2,13 +2,37 @@ POST http://localhost:8000/api/users/register
 Content-Type: application/json
 
 {
-  "email": "test@test.com",
-  "password": "123456",
-  "name": "Test User"
+  "email": "tes4s@test.com",
+  "password": "1234d56",
+  "name": "Test3 User"
 }
 
 ###
 
-GET http://localhost:8000/api/users/test@test.com
+POST http://localhost:8000/api/users/register
+Content-Type: application/json
+
+{
+  "email": "tes5s@test.com",
+  "password": "1234d56",
+  "name": "Test5 User"
+}
 
 ###
+
+POST http://localhost:8000/api/users/register
+Content-Type: application/json
+
+{
+  "email": "tes7s@test.com",
+  "password": "1234d5ff6",
+  "name": "Test7 User4"
+}
+
+###
+
+GET http://localhost:8000/api/users/68276aa0db5de912d59a8ee9
+
+###
+
+POST http://localhost:8000/api/users/add_friend?user_id=68277c38fa2ec5fc1a3338c2&friend_id=68276ad6db5de912d59a8eea

@@ -1,13 +1,11 @@
-POST http://localhost:8000/api/events/create
+
+
+POST http://localhost:8000/api/events/68276aa0db5de912d59a8ee9/create
 Content-Type: application/json
 
 {
-  "title": "Test Event",
-  "date": "2023-12-31T12:00:00"
+"category_id": "507f1f77bcf86cd799439011",
+"date": "2023-12-15T10:00:00",
+"location": "Москва, ул. Пушкина 10",
+"name": "Конференция по Python"
 }
-
-###
-
-GET http://localhost:8000/api/events/
-
-###
