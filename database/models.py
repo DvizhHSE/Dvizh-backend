@@ -1,16 +1,4 @@
-from database.database import Base
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from .schemas import User, Event, UserCreate, EventCreate, PyObjectId
 
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True)
-    email = Column(String, unique=True)
-    password = Column(String)
-    name = Column(String)
-
-class Event(Base):
-    __tablename__ = "events"
-    id = Column(Integer, primary_key=True)
-    title = Column(String)
-    date = Column(DateTime)
-    user_id = Column(Integer, ForeignKey("users.id"))
+# Для обратной совместимости, если где-то импортировались модели напрямую из models.py
+__all__ = ["User", "Event", "UserCreate", "EventCreate", "PyObjectId"]

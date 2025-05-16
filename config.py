@@ -1,10 +1,14 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 class Settings(BaseSettings):
-    DB_URL: str = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+    MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+    DB_NAME: str = os.getenv("DB_NAME", "dvizh")
+
+    class Config:
+        case_sensitive = True
 
 settings = Settings()

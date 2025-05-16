@@ -1,16 +1,30 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from motor.motor_asyncio import AsyncIOMotorClient
 from config import settings
+from pymongo import IndexModel
+from pymongo.errors import CollectionInvalid
 
-engine = create_engine(settings.DB_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+client = None
+db = None
 
-Base = declarative_base()
 
-def get_db():
-    db = SessionLocal()
+async def connect_to_mongo():
+    global client, db
+    client = AsyncIOMotorClient(settings.MONGODB_URL)
+    db = client[settings.DB_NAME]
+
+    # Создаем индексы при подключении
     try:
-        yield db
-    finally:
-        db.close()
+        await db.users.create_indexes([
+            IndexModel([("email", 1)], unique=True)
+        ])
+    except CollectionInvalid:
+        pass
+
+
+async def close_mongo_connection():
+    if client:
+        client.close()
+
+
+async def get_db():
+    return db

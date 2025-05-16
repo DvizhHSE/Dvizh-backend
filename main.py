@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 from api import users, events
-from database.database import engine, Base
-from database.models import User, Event
+from database.database import connect_to_mongo, close_mongo_connection
+from contextlib import asynccontextmanager
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await connect_to_mongo()
+    yield
+    await close_mongo_connection()
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.include_router(users.router, prefix="/api/users")
 app.include_router(events.router, prefix="/api/events")
 
