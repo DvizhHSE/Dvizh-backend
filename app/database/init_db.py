@@ -1,20 +1,21 @@
-from database.database import connect_to_mongo, get_db
-from database.schemas import Role, Status
+from app.database.database import get_db
+from app.schemas.schemas import Role, Status
 from bson import ObjectId
+import logging
 
+logger = logging.getLogger(__name__)
 
 async def init_roles_and_statuses():
     db = await get_db()
 
-    # Инициализация ролей
     if await db.roles.count_documents({}) == 0:
         await db.roles.insert_many([
             {"_id": Role.USER, "name": "Regular User"},
             {"_id": Role.ORGANIZER, "name": "Event Organizer"},
             {"_id": Role.ADMIN, "name": "Administrator"}
         ])
+        logger.info("Created initial roles")
 
-    # Инициализация статусов
     if await db.statuses.count_documents({}) == 0:
         await db.statuses.insert_many([
             {"_id": Status.PLANNED, "name": "Planned"},
@@ -22,7 +23,7 @@ async def init_roles_and_statuses():
             {"_id": Status.COMPLETED, "name": "Completed"},
             {"_id": Status.CANCELLED, "name": "Cancelled"}
         ])
-
+        logger.info("Created initial statuses")
 
 async def init_categories():
     db = await get_db()
@@ -32,3 +33,4 @@ async def init_categories():
             {"_id": ObjectId(), "name": "Митап"},
             {"_id": ObjectId(), "name": "Хакатон"}
         ])
+        logger.info("Created initial categories")

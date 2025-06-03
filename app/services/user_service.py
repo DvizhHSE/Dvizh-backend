@@ -1,7 +1,7 @@
 from bson.errors import InvalidId
 
-from database.schemas import User, UserCreate, Role, Event, Achievement
-from database.database import get_db
+from app.schemas.schemas import User, UserCreate, Role, Event, Achievement
+from app.database.database import get_db
 from passlib.context import CryptContext
 from fastapi import HTTPException, status
 from bson import ObjectId

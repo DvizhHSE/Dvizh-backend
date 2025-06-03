@@ -1,5 +1,5 @@
-from database.database import get_db
-from database.schemas import Category
+from app.database.database import get_db
+from app.schemas.schemas import Category
 from bson import ObjectId
 
 async def create_category(name: str):

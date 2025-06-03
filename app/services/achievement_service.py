@@ -1,5 +1,5 @@
 from database.database import get_db
-from database.schemas import Achievement
+from app.schemas.schemas import Achievement
 from bson import ObjectId
 
 async def create_achievement(name: str, picture_url: str):

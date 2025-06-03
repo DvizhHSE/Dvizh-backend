@@ -1,8 +1,8 @@
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
-from database.schemas import User, UserCreate
-from services.user_service import create_user, get_full_info_about_user, add_friend_service
-from database.database import get_db
+from app.schemas.schemas import User, UserCreate
+from app.services.user_service import create_user, get_full_info_about_user, add_friend_service
+from app.database.database import get_db
 from bson.errors import InvalidId
 from fastapi import Query
 

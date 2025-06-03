@@ -1,5 +1,5 @@
 from .database import get_db, connect_to_mongo, close_mongo_connection
-from .schemas import User, Event, UserCreate, EventCreate, PyObjectId
+from ..schemas.schemas import User, Event, UserCreate, EventCreate, PyObjectId
 
 __all__ = [
     "get_db",

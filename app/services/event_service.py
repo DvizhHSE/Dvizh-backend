@@ -1,5 +1,5 @@
-from database.schemas import Event, EventCreate, Status, User, Category
-from database.database import get_db
+from app.schemas.schemas import Event, EventCreate, Status, User, Category
+from app.database.database import get_db
 from bson import ObjectId
 from fastapi import HTTPException, status
 
