@@ -1,12 +1,13 @@
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.schemas import User, UserCreate
-from app.services.user_service import create_user, get_full_info_about_user, add_friend_service
+from app.services.user_service import create_user, get_full_info_about_user, add_friend_service, register_user_for_event
 from app.database.database import get_db
 from bson.errors import InvalidId
 from fastapi import Query
+from app.services import event_service
 
-router = APIRouter()
+router = APIRouter(tags=["User"])
 
 @router.post("/register", response_model=User)
 async def register(user_data: UserCreate):
@@ -76,5 +77,67 @@ async def add_friend_endpoint(
         return {"status": "success", "message": "Friend added successfully"}
     except HTTPException as he:
         raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/{event_id}/register/{user_id}")
+async def register_user_for_event_(event_id: str, user_id: str):
+    try:
+        await register_user_for_event(event_id, user_id)
+        return {"message": "User registered for event"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/home/{user_id}", response_model=dict)
+async def get_homepage_data(user_id: str):
+    """
+    Возвращает данные для главной страницы пользователя:
+    - Любимые мероприятия.
+    - Мероприятия, на которые записан пользователь.
+    - Мероприятия сегодня.
+    - Мероприятия на этой неделе.
+    """
+    try:    
+        favorite_events = await event_service.get_favorite_events(user_id)
+        planned_events = await event_service.get_planned_events_for_user(user_id)
+        today_events = await event_service.get_today_events()
+        this_week_events = await event_service.get_this_week_events()
+
+        return {     
+            "favorite_events": favorite_events,
+            "planned_events": planned_events,
+            "today_events": today_events,
+            "this_week_events": this_week_events
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/{user_id}/events")
+async def get_user_events(user_id: str):
+    """
+    Возвращает список всех мероприятий, в которых участвует пользователь (как участник или организатор).
+    """
+    print("s1")
+    try:
+        return await event_service.get_events_for_user(user_id)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/{user_id}/favorites/{event_id}")
+async def add_to_favorites(user_id: str, event_id: str):
+    """
+    Добавляет мероприятие в список любимых пользователя.
+    """
+    try:
+        await event_service.add_event_to_favorites(user_id, event_id)
+        return {"message": "Event added to favorites"}
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

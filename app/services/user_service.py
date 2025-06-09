@@ -96,3 +96,34 @@ async def add_friend_service(user_oid: ObjectId, friend_oid: ObjectId):
     )
 
     return True
+
+async def register_user_for_event(event_id: str, user_id: str):
+    db = await get_db()
+
+    # Verify event exists
+    event = await db.events.find_one({"_id": ObjectId(event_id)})
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    # Verify user exists
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check if user is already registered
+    if ObjectId(user_id) in [ObjectId(participant) for participant in event.get("participants", [])]:
+        raise HTTPException(status_code=400, detail="User already registered for this event")
+
+    # Register user for event
+    await db.events.update_one(
+        {"_id": ObjectId(event_id)},
+        {"$addToSet": {"participants": ObjectId(user_id)}}
+    )
+
+    # Add event to user's attended events (optional, depending on your logic)
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$addToSet": {"favorite_events": ObjectId(event_id)}}
+    )
+
+    return True

@@ -3,7 +3,7 @@ from app.schemas.schemas import Event, EventCreate
 from app.services.event_service import create_event
 from app.database.database import get_db
 
-router = APIRouter()
+router = APIRouter(tags=["Event"])
 
 
 @router.post("/{user_id}/create", response_model=Event)

@@ -99,6 +99,7 @@ class User(UserBase):
     events_attended: int = 0
     events_organized: int = 0
     role: Role = Role.USER
+    is_active: bool = True
 
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
@@ -112,6 +113,7 @@ class User(UserBase):
                 "email": "user@example.com",
                 "profile_picture": "https://example.com/pic.jpg",
                 "role": "user",
+                "is_active": "True",
                 "favorite_events": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439011"],
                 "friends": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439011"],
                 "achievements": ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439011"],
@@ -147,7 +149,7 @@ class Event(EventBase):
     participants: List[PyObjectId] = []
     organizers: List[PyObjectId] = []
     status: Status = Status.PLANNED
-
+    photos: List[str] = []
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
         populate_by_name=True,
@@ -161,7 +163,8 @@ class Event(EventBase):
                 "organizers": ["707f1f77bcf86cd799439012", "507f1f77bcf86cd799439012"],
                 "location": "Москва, ул. Пушкина 10",
                 "category_id": "507f1f77bcf86cd799439011",
-                "status": "planned"
+                "status": "planned",
+                "photos": []
             }
         }
     )

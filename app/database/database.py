@@ -24,8 +24,6 @@ async def connect_to_mongo():
             await db.command('ping')
             logger.info("Successfully connected to MongoDB")
             
-            # Создаем индексы
-            await create_indexes()
             return
             
         except Exception as e:
@@ -36,29 +34,6 @@ async def connect_to_mongo():
             else:
                 logger.error("Failed to connect to MongoDB after several attempts")
                 raise ConnectionError("Failed to connect to MongoDB")
-
-async def create_indexes():
-    try:
-        logger.info("Creating database indexes...")
-        await db.users.create_indexes([
-            IndexModel([("email", ASCENDING)], unique=True),
-            IndexModel([("favorite_events", ASCENDING)]),
-            IndexModel([("friends", ASCENDING)])
-        ])
-
-        await db.events.create_indexes([
-            IndexModel([("date", ASCENDING)]),
-            IndexModel([("category_id", ASCENDING)]),
-            IndexModel([("participants", ASCENDING)]),
-            IndexModel([("organizers", ASCENDING)])
-        ])
-
-        await db.categories.create_index([("name", ASCENDING)], unique=True)
-        logger.info("Database indexes created")
-        
-    except CollectionInvalid as e:
-        logger.error(f"Index creation error: {e}")
-        raise
 
 async def close_mongo_connection():
     if client:

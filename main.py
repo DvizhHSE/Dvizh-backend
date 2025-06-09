@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import users, events
+from app.api import users, events, admins
 from app.database.database import connect_to_mongo, close_mongo_connection
 from contextlib import asynccontextmanager
 from app.database.init_db import init_roles_and_statuses, init_categories
@@ -43,7 +43,7 @@ app = FastAPI(
 
 app.include_router(users.router, prefix="/api/users")
 app.include_router(events.router, prefix="/api/events")
-
+app.include_router(admins.router, prefix="/api/admins")
 @app.get("/")
 async def root():
     return {"message": "HSE.Dvizh API is running"}
