@@ -4,6 +4,9 @@ from app.database.database import connect_to_mongo, close_mongo_connection
 from contextlib import asynccontextmanager
 from app.database.init_db import init_roles_and_statuses, init_categories
 import logging
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = ["http://localhost:5173"]
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,7 +43,13 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(users.router, prefix="/api/users")
 app.include_router(events.router, prefix="/api/events")
 app.include_router(admins.router, prefix="/api/admins")
