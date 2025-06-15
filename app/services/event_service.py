@@ -36,22 +36,11 @@ async def get_full_info_about_event(event_id: str) -> Event:
     if not event:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
-    # Получаем категорию по ID
-    category = await get_category_by_id(event.get("category_id")) 
-    if not category:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
-
-    # Преобразуем ObjectId в строки для всех полей с ID
-    event_data = {
-        **event,
-        "_id": str(event["_id"]),
-        "participants": [str(participant_id) for participant_id in event.get("participants", [])],
-        "organizers": [str(organizer_id) for organizer_id in event.get("organizers", [])],
-        "category_id": category 
-    }
-    
-    # Создаем и возвращаем объект Event
-    return Event(**event_data)
+    try:
+        validated_event = await validate_event(event)
+        return(validated_event)
+    except HTTPException as e:
+        print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
 
 
 async def add_participant(event_id: str, user_id: str):
@@ -86,15 +75,12 @@ async def get_events_for_user(user_id: str):
     for event in all_events:
         if str(event["_id"]) not in unique_event_ids:
             unique_event_ids.append(str(event["_id"]))
-            event["_id"] = str(event["_id"])
-
-            # Преобразуем organizers и participants в списки строк
-            event["organizers"] = [str(org_id) if isinstance(org_id, ObjectId) else org_id for org_id in event.get("organizers", [])]
-            event["participants"] = [str(part_id) if isinstance(part_id, ObjectId) else part_id for part_id in event.get("participants", [])]
-            category = await get_category_by_id(str(event.get("category_id")))
-            event["category_id"] = category
-            unique_events.append(Event(**event)) # Convert dict to Event model
-
+            try:
+                validated_event = await validate_event(event)
+                unique_events.append(validated_event)
+            except HTTPException as e:
+                print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
+                continue #Пропускаем событие
     return unique_events
 
 
@@ -106,19 +92,17 @@ async def get_favorite_events(user_id: str):
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
     favorite_event_ids = user.get("favorite_events", [])
     favorite_events = []
     for event_id in favorite_event_ids:
         event = await db.events.find_one({"_id": ObjectId(event_id)})
         if event:
-            event["_id"] = str(event["_id"])
-            # Преобразуем organizers и participants в списки строк
-            event["organizers"] = [str(org_id) if isinstance(org_id, ObjectId) else org_id for org_id in event.get("organizers", [])]
-            event["participants"] = [str(part_id) if isinstance(part_id, ObjectId) else part_id for part_id in event.get("participants", [])]
-            category = await get_category_by_id(str(event.get("category_id")))
-            event["category_id"] = category
-            favorite_events.append(Event(**event))  # Convert dict to Event model
+            try:
+                validated_event = await validate_event(event)
+                favorite_events.append(validated_event)
+            except HTTPException as e:
+                print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
+                continue #Пропускаем событие
     return favorite_events
 
 
@@ -134,13 +118,15 @@ async def get_planned_events_for_user(user_id: str):
     }).to_list(length=None)
     formatted_events = []
     for event in events:
-        event["_id"] = str(event["_id"])
-        # Преобразуем organizers и participants в списки строк
-        event["organizers"] = [str(org_id) if isinstance(org_id, ObjectId) else org_id for org_id in event.get("organizers", [])]
-        event["participants"] = [str(part_id) if isinstance(part_id, ObjectId) else part_id for part_id in event.get("participants", [])]
-        category = await get_category_by_id(str(event.get("category_id")))
-        event["category_id"] = category
-        formatted_events.append(Event(**event))  # Convert dict to Event model
+        try:
+            validated_event = await validate_event(event)
+            formatted_events.append(validated_event)
+        except HTTPException as e:
+            print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
+            continue #Пропускаем событие
+        except Exception as e:
+             print(f"Skipping event {event.get('_id')}: {e}") # Логируем факт пропуска события
+             continue
     return formatted_events
 
 
@@ -158,13 +144,15 @@ async def get_today_events():
 
     formatted_events = []
     for event in events:
-        event["_id"] = str(event["_id"])
-        # Преобразуем organizers и participants в списки строк
-        event["organizers"] = [str(org_id) if isinstance(org_id, ObjectId) else org_id for org_id in event.get("organizers", [])]
-        event["participants"] = [str(part_id) if isinstance(part_id, ObjectId) else part_id for part_id in event.get("participants", [])]
-        category = await get_category_by_id(str(event.get("category_id")))
-        event["category_id"] = category
-        formatted_events.append(Event(**event))  # Convert dict to Event model
+        try:
+            validated_event = await validate_event(event)
+            formatted_events.append(validated_event)
+        except HTTPException as e:
+            print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
+            continue #Пропускаем событие
+        except Exception as e:
+             print(f"Skipping event {event.get('_id')}: {e}") # Логируем факт пропуска события
+             continue
     return formatted_events
 
 
@@ -183,13 +171,15 @@ async def get_this_week_events():
 
     formatted_events = []
     for event in events:
-        event["_id"] = str(event["_id"])
-        # Преобразуем organizers и participants в списки строк
-        event["organizers"] = [str(org_id) if isinstance(org_id, ObjectId) else org_id for org_id in event.get("organizers", [])]
-        event["participants"] = [str(part_id) if isinstance(part_id, ObjectId) else part_id for part_id in event.get("participants", [])]
-        category = await get_category_by_id(str(event.get("category_id")))
-        event["category_id"] = category
-        formatted_events.append(Event(**event))  # Convert dict to Event model
+        try:
+            validated_event = await validate_event(event)
+            formatted_events.append(validated_event)
+        except HTTPException as e:
+            print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
+            continue #Пропускаем событие
+        except Exception as e:
+             print(f"Skipping event {event.get('_id')}: {e}") # Логируем факт пропуска события
+             continue
     return formatted_events
 
 async def add_event_to_favorites(user_id: str, event_id: str):
@@ -271,4 +261,5 @@ async def validate_event(event: dict) -> Event:
     event["description"] = event.get("description", "")
     event["age_limit"] = event.get("age_limit", "0+")
     event["for_roles"] = event.get("for_roles", [])
+    print(event)
     return Event(**event)
