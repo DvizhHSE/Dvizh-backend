@@ -1,7 +1,7 @@
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.schemas import User, UserCreate
-from app.services.user_service import create_user, get_full_info_about_user, add_friend_service, register_user_for_event
+from app.services.user_service import create_user, get_full_info_about_user, add_friend_service, register_user_for_event, authenticate_user, update_user
 from app.database.database import get_db
 from bson.errors import InvalidId
 from fastapi import Query
@@ -17,8 +17,32 @@ async def register(user_data: UserCreate):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.post("/login", response_model=User)
+async def login_for_access_token(email,password):
+    """
+    Авторизует пользователя и возвращает данные пользователя.
+    """
+    user = await authenticate_user(email,password)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
 
-
+@router.patch("/{user_id}", response_model=User)
+async def update_user_endpoint(user_id: str, user_data: dict):
+    """
+    Обновляет данные пользователя.
+    """
+    try:
+        updated_user = await update_user(user_id, user_data)
+        return updated_user
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 @router.get(
     "/{user_id}",
     response_model=User,
@@ -121,7 +145,6 @@ async def get_user_events(user_id: str):
     """
     Возвращает список всех мероприятий, в которых участвует пользователь (как участник или организатор).
     """
-    print("s1")
     try:
         return await event_service.get_events_for_user(user_id)
     except HTTPException as e:

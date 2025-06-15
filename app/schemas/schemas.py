@@ -81,23 +81,26 @@ class Status(str, Enum):
 
 class UserBase(BaseModel):
     name: str
+    surname: str
+    birthday: datetime
     email: EmailStr
-    profile_picture: Optional[str] = None
-    phone_number: Optional[str] = None
-
+    
 
 class UserCreate(UserBase):
     password: str
-
+    sex: str
+    role: str
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "name": "Иван Иванов",
+                "name": "Иван",
+                "surname": "Иванов",
                 "email": "user@example.com",
+                "birthday": "2005-05-05",
                 "password": "securepassword123",
-                "profile_picture": "https://example.com/pic.jpg",
                 "phone_number": "88005353535",
-                "sex": "male"
+                "role": "Студент",
+                "sex": "Мужской"
             }
         }
     )
@@ -106,15 +109,16 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: PyObjectId = Field(alias="_id")
     password: str
+    sex: str
+    role: str
     favorite_events: List[PyObjectId] = []
     friends: List[PyObjectId] = []
     achievements: List[PyObjectId] = []
     events_attended: int = 0
     events_organized: int = 0
-    role: Role = Role.USER
     is_active: bool = True
-    phone_nuber: str = None
-    birthday: date = None
+    phone_number: Optional[str] = None
+    profile_picture: Optional[str]=None
 
     model_config = ConfigDict(
         json_encoders={ObjectId: str},

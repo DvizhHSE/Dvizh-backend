@@ -1,5 +1,5 @@
 from bson.errors import InvalidId
-
+from datetime import datetime
 from app.schemas.schemas import User, UserCreate, Role, Event, Achievement
 from app.database.database import get_db
 from passlib.context import CryptContext
@@ -17,10 +17,10 @@ async def create_user(user_data: UserCreate):
             detail="User with this email already exists"
         )
 
-    hashed_password = pwd_context.hash(user_data.password)
+    #hashed_password = pwd_context.hash(user_data.password)
     user_dict = user_data.model_dump(exclude={"id"})  # Исключаем id из входных данных
     user_dict.update({
-        "password": hashed_password,
+        "password": user_data.password,
         "role": Role.USER.value,
         "events_attended": 0,
         "events_organized": 0
@@ -33,6 +33,28 @@ async def create_user(user_data: UserCreate):
     created_user["_id"] = str(created_user["_id"])
     return User(**created_user)
 
+async def authenticate_user(email: str, password: str) -> User:
+    """
+    Проверяет email и пароль пользователя.
+    """
+    db = await get_db()
+    user = await db.users.find_one({"email": email})
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password"
+        )
+
+    #hashed_password =pwd_context.hash(password)
+    if (password!=user["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password"
+        )
+    user["_id"] = str(user["_id"])
+
+    return User(**user)
 
 async def get_user_by_id(user_id: str):
     db = await get_db()
@@ -144,3 +166,27 @@ async def update_user_profile_picture(user_id: str, picture_url: str) -> User:
         raise HTTPException(status_code=404, detail="User not found")
     user["_id"] = str(user["_id"])
     return User(**user)
+
+async def update_user(user_id: str, user_data: dict) -> User:
+    """
+    Обновляет данные пользователя.
+    """
+    db = await get_db()
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if user_data.get("birthday"):
+      user_data["birthday"] = datetime.strptime(user_data["birthday"], "%Y-%m-%dT%H:%M:%S")
+
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": user_data}
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+    updated_user["_id"] = str(updated_user["_id"])
+    return User(**updated_user)
