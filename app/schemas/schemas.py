@@ -158,7 +158,7 @@ class EventCreate(EventBase):
         json_schema_extra={
             "example": {
                 "name": "Конференция по Python",
-                "date": "2023-12-15T10:00:00",
+                "date": "2025-06-17T10:00:00",
                 "location": "Москва, ул. Пушкина 10",
                 "category_id": "683f4cddbb8b713c343f0913",
                 "photos": ["https://synergy.ru/assets/upload/news/pr/whatsapp_image_2021_09_07_at_14.05.01.jpeg"],

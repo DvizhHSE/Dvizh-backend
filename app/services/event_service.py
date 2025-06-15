@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from app.schemas.schemas import Event
 from app.services.category_service import get_category_by_id
 
+
 async def create_event(event_data: EventCreate, organizer_id: str):
     db = await get_db()
     event_dict = event_data.model_dump()
@@ -238,14 +239,36 @@ async def get_all_events():
     events = await db.events.find().to_list(length=None)
     formatted_events = []
     for event in events:
-        event["_id"] = str(event["_id"])
-         # Преобразуем organizers и participants в списки строк
-        event["organizers"] = [str(org_id) if isinstance(org_id, ObjectId) else org_id for org_id in event.get("organizers", [])]
-        event["participants"] = [str(part_id) if isinstance(part_id, ObjectId) else part_id for part_id in event.get("participants", [])]
-        print("reformat_category")
-        category = await get_category_by_id(str(event.get("category_id")))
-        print(category)
-        print(str(category))
-        event["category_id"] = str(category)
-        formatted_events.append(Event(**event))
+        try:
+            validated_event = await validate_event(event)
+            formatted_events.append(validated_event)
+        except HTTPException as e:
+            print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
+            continue #Пропускаем событие
+        except Exception as e:
+             print(f"Skipping event {event.get('_id')}: {e}") # Логируем факт пропуска события
+             continue
     return formatted_events
+
+
+
+async def validate_event(event: dict) -> Event:
+    """
+    Проверяет валидность события и форматирует его.
+    Выбрасывает HTTPException, если событие не валидно.
+    """
+
+    event["_id"] = str(event["_id"])
+
+    # Преобразуем organizers и participants в списки строк
+    event["organizers"] = [str(org_id) if isinstance(org_id, ObjectId) else org_id for org_id in event.get("organizers", [])]
+    event["participants"] = [str(part_id) if isinstance(part_id, ObjectId) else part_id for part_id in event.get("participants", [])]
+
+    # Получаем категорию
+    category = await get_category_by_id(event.get("category_id"))
+    event["category_id"] = category
+    event["photos"] = event.get("photos", [])
+    event["description"] = event.get("description", "")
+    event["age_limit"] = event.get("age_limit", "0+")
+    event["for_roles"] = event.get("for_roles", [])
+    return Event(**event)
