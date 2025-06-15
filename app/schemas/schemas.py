@@ -36,7 +36,7 @@ class PyObjectId(str):
 class Role(str, Enum):
     USER = "user"
     ORGANIZER = "organizer"
-    ADMIN = "admin"
+    ADMIN = "admin" 
 
 
 class Category(BaseModel):
@@ -98,7 +98,6 @@ class UserCreate(UserBase):
                 "email": "user@example.com",
                 "birthday": "2005-05-05",
                 "password": "securepassword123",
-                "phone_number": "88005353535",
                 "role": "Студент",
                 "sex": "Мужской"
             }
@@ -148,9 +147,13 @@ class EventBase(BaseModel):
     date: datetime
     location: str
     category_id: str
-    photos: List[str] = []
+    
 
 class EventCreate(EventBase):
+    photos: List[str] 
+    description: str
+    age_limit: str
+    for_roles: List[str]
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -158,7 +161,10 @@ class EventCreate(EventBase):
                 "date": "2023-12-15T10:00:00",
                 "location": "Москва, ул. Пушкина 10",
                 "category_id": "683f4cddbb8b713c343f0913",
-                "photos": ["https://synergy.ru/assets/upload/news/pr/whatsapp_image_2021_09_07_at_14.05.01.jpeg"]
+                "photos": ["https://synergy.ru/assets/upload/news/pr/whatsapp_image_2021_09_07_at_14.05.01.jpeg"],
+                "description": "lalalaalalallaalalalal",
+                "age_limit": "16+",
+                "for_roles": ["Школьник"]
             }
         }
     )
@@ -169,6 +175,10 @@ class Event(EventBase):
     participants: List[PyObjectId] = []
     organizers: List[PyObjectId] = []
     status: Status = Status.PLANNED
+    photos: List[str] 
+    description: str
+    age_limit: str
+    for_roles: List[str]
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
         populate_by_name=True,

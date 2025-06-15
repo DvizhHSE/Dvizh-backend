@@ -33,17 +33,22 @@ async def get_full_info_about_event(event_id: str) -> Event:
     # Получаем событие из базы
     event = await db.events.find_one({"_id": ObjectId(event_id)})
     if not event:
-        return None
-    category = await get_category_by_id(str(event.get("category_id")))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+
+    # Получаем категорию по ID
+    category = await get_category_by_id(event.get("category_id")) 
+    if not category:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+
     # Преобразуем ObjectId в строки для всех полей с ID
     event_data = {
         **event,
         "_id": str(event["_id"]),
         "participants": [str(participant_id) for participant_id in event.get("participants", [])],
         "organizers": [str(organizer_id) for organizer_id in event.get("organizers", [])],
-        "category_id": category
+        "category_id": category 
     }
-
+    
     # Создаем и возвращаем объект Event
     return Event(**event_data)
 
