@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List
 from bson import ObjectId
 from pydantic_core import core_schema
@@ -39,10 +39,20 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 
-class Category(str, Enum):
-    CONFERENCE = "Конференция",
-    MEETUP = "Митап",
-    HACKATON = "Хакатон"
+class Category(BaseModel):
+    id: PyObjectId = Field(alias="_id")
+    name: str
+    model_config = ConfigDict(
+        json_encoders={ObjectId: str},
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        json_schema_extra={
+            "example": {
+                "id": "683f4cddbb8b713c343f0913",
+                "name": "Конференция"
+            }
+        }
+    )
 
 
 class Achievement(BaseModel):
@@ -73,6 +83,7 @@ class UserBase(BaseModel):
     name: str
     email: EmailStr
     profile_picture: Optional[str] = None
+    phone_number: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -84,7 +95,9 @@ class UserCreate(UserBase):
                 "name": "Иван Иванов",
                 "email": "user@example.com",
                 "password": "securepassword123",
-                "profile_picture": "https://example.com/pic.jpg"
+                "profile_picture": "https://example.com/pic.jpg",
+                "phone_number": "88005353535",
+                "sex": "male"
             }
         }
     )
@@ -100,6 +113,8 @@ class User(UserBase):
     events_organized: int = 0
     role: Role = Role.USER
     is_active: bool = True
+    phone_nuber: str = None
+    birthday: date = None
 
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
@@ -128,8 +143,8 @@ class EventBase(BaseModel):
     name: str
     date: datetime
     location: str
-    category_id: PyObjectId
-
+    category_id: str
+    photos: List[str] = []
 
 class EventCreate(EventBase):
     model_config = ConfigDict(
@@ -138,7 +153,8 @@ class EventCreate(EventBase):
                 "name": "Конференция по Python",
                 "date": "2023-12-15T10:00:00",
                 "location": "Москва, ул. Пушкина 10",
-                "category_id": "507f1f77bcf86cd799439011"
+                "category_id": "683f4cddbb8b713c343f0913",
+                "photos": ["https://synergy.ru/assets/upload/news/pr/whatsapp_image_2021_09_07_at_14.05.01.jpeg"]
             }
         }
     )
@@ -149,7 +165,6 @@ class Event(EventBase):
     participants: List[PyObjectId] = []
     organizers: List[PyObjectId] = []
     status: Status = Status.PLANNED
-    photos: List[str] = []
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
         populate_by_name=True,
@@ -162,7 +177,7 @@ class Event(EventBase):
                 "participants": ["307f1f77bcf86cd799439012", "407f1f77bcf86cd799439012"],
                 "organizers": ["707f1f77bcf86cd799439012", "507f1f77bcf86cd799439012"],
                 "location": "Москва, ул. Пушкина 10",
-                "category_id": "507f1f77bcf86cd799439011",
+                "category_id": "683f4cddbb8b713c343f0913",
                 "status": "planned",
                 "photos": []
             }

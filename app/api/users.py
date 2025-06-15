@@ -141,3 +141,15 @@ async def add_to_favorites(user_id: str, event_id: str):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.patch("/{user_id}/profile-picture")
+async def update_user_profile_picture(user_id: str, picture_url: str):
+    """
+    Обновляет URL картинки профиля пользователя.
+    """
+    db = await get_db()
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"profile_picture": picture_url}}
+    )
+    return {"message": "Фото обновлено"}

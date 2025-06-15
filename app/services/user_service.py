@@ -127,3 +127,20 @@ async def register_user_for_event(event_id: str, user_id: str):
     )
 
     return True
+async def update_user_profile_picture(user_id: str, picture_url: str) -> User:
+    """
+    Обновляет URL картинки профиля пользователя.
+    """
+    db = await get_db()
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"profile_picture": picture_url}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user["_id"] = str(user["_id"])
+    return User(**user)
