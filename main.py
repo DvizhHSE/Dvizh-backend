@@ -6,7 +6,6 @@ from app.database.init_db import init_roles_and_statuses, init_categories
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 
-origins = ["http://localhost:5173"]
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,6 +42,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+origins = ["http://localhost:5173"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
