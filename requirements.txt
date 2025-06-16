@@ -3,6 +3,9 @@ uvicorn
 motor
 pymongo
 python-dotenv
+Pillow
+boto3==1.28.0
+python-multipart
 passlib[bcrypt]
 pydantic[email]
 pydantic>=2.0

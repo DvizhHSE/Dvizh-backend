@@ -263,3 +263,25 @@ async def validate_event(event: dict) -> Event:
     event["for_roles"] = event.get("for_roles", [])
     print(event)
     return Event(**event)
+
+async def get_user_info_string(user_id: str) -> str:
+    """
+    "Имя Фамилия, email, телефон (если есть)".
+    """
+    db = await get_db()
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    name = user.get("name", "")  # Получаем имя, подстраховываясь от отсутствия
+    surname = user.get("surname", "")  # Получаем фамилию
+    email = user.get("email", "")  # Получаем email
+    phone_number = user.get("phone_number", "")  # Получаем номер телефона, если есть
+
+    user_info = f"{name} {surname}, {email}"  # Формируем основную часть строки
+
+    if phone_number:
+        user_info += f", {phone_number}"  # Добавляем телефон, если он есть
+
+    return user_info

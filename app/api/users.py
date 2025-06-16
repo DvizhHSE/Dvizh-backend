@@ -176,3 +176,5 @@ async def update_user_profile_picture(user_id: str, picture_url: str):
         {"$set": {"profile_picture": picture_url}}
     )
     return {"message": "Фото обновлено"}
+
+
