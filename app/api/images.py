@@ -26,7 +26,7 @@ s3_client = boto3.client(
     config=boto3.session.Config(signature_version='v4', s3={'checksum_algorithm': None}) #Попробуем отключить совсем
 )
 
-@router.patch("upload-picture")
+@router.patch("/upload-picture")
 async def upload_profile_picture(file: UploadFile = File(...)):
     """
     Загружает изображение профиля пользователя в Backblaze B2,
