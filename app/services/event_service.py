@@ -63,7 +63,7 @@ async def get_events_for_user(user_id: str):
     db = await get_db()
 
     # Find events where user is a participant
-    participant_events = await db.events.find({"participants": user_id}).to_list(length=None)
+    participant_events = await db.events.find({"participants": ObjectId(user_id)}).to_list(length=None)
 
     # Find events where user is an organizer
     organizer_events = await db.events.find({"organizers": user_id}).to_list(length=None)
@@ -113,13 +113,13 @@ async def get_future_events_for_user(user_id: str):
     дата которых больше текущей даты.
     """
     db = await get_db()
-    user_oid = user_id
+    user_oid = ObjectID(user_id)
     now = datetime.utcnow()  
 
     events = await db.events.find({
         "$or": [
             {"participants": user_oid},
-            {"organizers": user_oid}
+            {"organizers": user_id}
         ],
         "date": {"$gt": now} 
     }).to_list(length=None)

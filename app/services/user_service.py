@@ -142,12 +142,6 @@ async def register_user_for_event(event_id: str, user_id: str):
         {"$addToSet": {"participants": ObjectId(user_id)}}
     )
 
-    # Add event to user's attended events (optional, depending on your logic)
-    await db.users.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$addToSet": {"favorite_events": ObjectId(event_id)}}
-    )
-
     return True
 async def update_user_profile_picture(user_id: str, picture_url: str) -> User:
     """
