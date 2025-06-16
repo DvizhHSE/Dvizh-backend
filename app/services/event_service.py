@@ -113,12 +113,11 @@ async def get_future_events_for_user(user_id: str):
     дата которых больше текущей даты.
     """
     db = await get_db()
-    user_oid = ObjectID(user_id)
     now = datetime.utcnow()  
 
     events = await db.events.find({
         "$or": [
-            {"participants": user_oid},
+            {"participants": ObjectId(user_id)},
             {"organizers": user_id}
         ],
         "date": {"$gt": now} 
