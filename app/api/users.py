@@ -125,7 +125,7 @@ async def get_homepage_data(user_id: str):
     """
     try:    
         favorite_events = await event_service.get_favorite_events(user_id)
-        planned_events = await event_service.get_planned_events_for_user(user_id)
+        planned_events = await event_service.get_future_events_for_user(user_id)
         today_events = await event_service.get_today_events()
         this_week_events = await event_service.get_this_week_events()
 

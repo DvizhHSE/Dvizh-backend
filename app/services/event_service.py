@@ -9,19 +9,17 @@ from app.services.category_service import get_category_by_id
 
 async def create_event(event_data: EventCreate, organizer_id: str):
     db = await get_db()
-    event_dict = event_data.model_dump()
-
-    organizer_oid = ObjectId(organizer_id)  
+    event_dict = event_data.model_dump() 
 
     event_dict.update({
-        "organizers": [organizer_oid],  # Используем ObjectId здесь
+        "organizers": organizer_id,  
         "status": Status.PLANNED.value
     })
 
     result = await db.events.insert_one(event_dict)
 
     await db.users.update_one(
-        {"_id": organizer_oid},  
+        {"_id": organizer_id},  
         {"$inc": {"events_organized": 1}}
     )
 
@@ -35,10 +33,13 @@ async def get_full_info_about_event(event_id: str) -> Event:
     event = await db.events.find_one({"_id": ObjectId(event_id)})
     if not event:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-
     try:
         validated_event = await validate_event(event)
-        return(validated_event)
+        event_dict = validated_event.model_dump() 
+        event_dict.update({
+            "organizers": await get_user_info_string(event_dict["organizers"]),  
+    })
+        return(event_dict)
     except HTTPException as e:
         print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
 
@@ -60,13 +61,12 @@ async def get_events_for_user(user_id: str):
     Возвращает список всех мероприятий, в которых участвует пользователь (как участник или организатор).
     """
     db = await get_db()
-    user_oid = ObjectId(user_id)
 
     # Find events where user is a participant
-    participant_events = await db.events.find({"participants": user_oid}).to_list(length=None)
+    participant_events = await db.events.find({"participants": user_id}).to_list(length=None)
 
     # Find events where user is an organizer
-    organizer_events = await db.events.find({"organizers": user_oid}).to_list(length=None)
+    organizer_events = await db.events.find({"organizers": user_id}).to_list(length=None)
 
     # Combine events and remove duplicates (if any)
     all_events = participant_events + organizer_events
@@ -106,29 +106,36 @@ async def get_favorite_events(user_id: str):
     return favorite_events
 
 
-async def get_planned_events_for_user(user_id: str):
+async def get_future_events_for_user(user_id: str):
     """
-    Возвращает список мероприятий со статусом "planned", на которые записан пользователь.
+    Возвращает список всех будущих мероприятий, в которых пользователь является
+    участником или организатором.  Будущие мероприятия - это мероприятия,
+    дата которых больше текущей даты.
     """
     db = await get_db()
-    user_oid = ObjectId(user_id)
+    user_oid = user_id
+    now = datetime.utcnow()  
+
     events = await db.events.find({
-        "status": "planned",
-        "participants": user_oid
+        "$or": [
+            {"participants": user_oid},
+            {"organizers": user_oid}
+        ],
+        "date": {"$gt": now} 
     }).to_list(length=None)
-    formatted_events = []
+
+    formatted_events =[]
     for event in events:
         try:
             validated_event = await validate_event(event)
             formatted_events.append(validated_event)
         except HTTPException as e:
-            print(f"Skipping event {event.get('_id')}: {e.detail}") # Логируем факт пропуска события
-            continue #Пропускаем событие
+            print(f"Skipping event {event.get('_id')}: {e.detail}")  # Логируем
+            continue
         except Exception as e:
-             print(f"Skipping event {event.get('_id')}: {e}") # Логируем факт пропуска события
-             continue
+            print(f"Skipping event {event.get('_id')}: {e}")  # Логируем
+            continue
     return formatted_events
-
 
 async def get_today_events():
     """
@@ -251,11 +258,13 @@ async def validate_event(event: dict) -> Event:
     event["_id"] = str(event["_id"])
 
     # Преобразуем organizers и participants в списки строк
-    event["organizers"] = [str(org_id) if isinstance(org_id, ObjectId) else org_id for org_id in event.get("organizers", [])]
     event["participants"] = [str(part_id) if isinstance(part_id, ObjectId) else part_id for part_id in event.get("participants", [])]
 
     # Получаем категорию
     category = await get_category_by_id(event.get("category_id"))
+    org=event.get("organizers")
+    if (len(str(org[0]))>1):
+        event["organizers"]=str(org[0])
     event["category_id"] = category
     event["photos"] = event.get("photos", [])
     event["description"] = event.get("description", "")
@@ -282,6 +291,6 @@ async def get_user_info_string(user_id: str) -> str:
     user_info = f"{name} {surname}, {email}"  # Формируем основную часть строки
 
     if phone_number:
-        user_info += f", {phone_number}"  # Добавляем телефон, если он есть
+        user_info += f" {phone_number}"  # Добавляем телефон, если он есть
 
     return user_info

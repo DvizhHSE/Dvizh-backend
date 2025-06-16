@@ -173,7 +173,7 @@ class EventCreate(EventBase):
 class Event(EventBase):
     id: PyObjectId = Field(alias="_id")
     participants: List[PyObjectId] = []
-    organizers: List[PyObjectId] = []
+    organizers: str=""
     status: Status = Status.PLANNED
     photos: List[str] 
     description: str
@@ -189,7 +189,7 @@ class Event(EventBase):
                 "name": "Конференция по Python",
                 "date": "2023-12-15T10:00:00",
                 "participants": ["307f1f77bcf86cd799439012", "407f1f77bcf86cd799439012"],
-                "organizers": ["707f1f77bcf86cd799439012", "507f1f77bcf86cd799439012"],
+                "organizer": ["707f1f77bcf86cd799439012", "507f1f77bcf86cd799439012"],
                 "location": "Москва, ул. Пушкина 10",
                 "category_id": "683f4cddbb8b713c343f0913",
                 "status": "planned",
