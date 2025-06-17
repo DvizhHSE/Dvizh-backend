@@ -21,7 +21,6 @@ async def create_user(user_data: UserCreate):
     user_dict = user_data.model_dump(exclude={"id"})  # Исключаем id из входных данных
     user_dict.update({
         "password": user_data.password,
-        "role": Role.USER.value,
         "events_attended": 0,
         "events_organized": 0
     })
