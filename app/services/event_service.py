@@ -120,7 +120,7 @@ async def get_future_events_for_user(user_id: str):
             {"participants": ObjectId(user_id)},
             {"organizers": user_id}
         ],
-        "date": {"$gt": now} 
+        "date": {"$gte": now} 
     }).to_list(length=None)
 
     formatted_events =[]
