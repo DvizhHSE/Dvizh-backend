@@ -39,23 +39,25 @@ async def authenticate_user(email: str, password: str) -> User:
     """
     db = await get_db()
     user = await db.users.find_one({"email": email})
-
+   
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
         )
 
+    try:
     #hashed_password =pwd_context.hash(password)
-    if (password!=user["password"]):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect email or password"
-        )
-    user["_id"] = str(user["_id"])
-
-    return User(**user)
-
+        if (password!=user["password"]):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Incorrect email or password"
+            )
+        user["_id"] = str(user["_id"])
+        res=await get_full_info_about_user(user["_id"])
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=user)
 async def get_user_by_id(user_id: str):
     db = await get_db()
     user = await db.users.find_one({"_id": ObjectId(user_id)})

@@ -35,25 +35,40 @@ async def upload_profile_picture(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         image = Image.open(io.BytesIO(contents))
-
         file_name = f"{uuid.uuid4()}.{image.format.lower()}"
+
         try:
             s3_client.upload_fileobj(
-                io.BytesIO(contents),
-                BUCKET_NAME,
-                file_name,
-                ExtraArgs={"ContentType": file.content_type}, 
+                Fileobj=io.BytesIO(contents),
+                Bucket=BUCKET_NAME,
+                Key=file_name,
+                ExtraArgs={"ContentType": file.content_type}
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to upload to B2: {e}",
+                status_code=500,
+                detail=f"B2 upload failed: {str(e)}"
+            )
+        
+        try:
+            presigned_url = s3_client.generate_presigned_url(
+                ClientMethod='get_object',
+                Params={
+                    'Bucket': BUCKET_NAME,
+                    'Key': file_name
+                },
+                ExpiresIn=604800
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"URL generation failed: {str(e)}"
             )
 
-        # Construct the image URL
-        image_url = f"{ENDPOINT_URL}/{BUCKET_NAME}/{file_name}"
-
-        return {"profile_picture": image_url}
+        return {"profile_picture": presigned_url}
 
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal error: {str(e)}"
+        )
