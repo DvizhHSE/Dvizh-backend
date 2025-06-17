@@ -42,7 +42,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
-origins = ["http://localhost:5173"]
+origins = ["http://localhost:5173", "https://dvizh-frontend-production.up.railway.app"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
